@@ -17,6 +17,7 @@ import {
 interface PluginSettings {
 	pluginLanguage: string;
 	bibleEdition: string;
+	useOnlineLibrary: boolean;
 	expandBibleBookName: boolean;
 	capitalizeFirstCharBibleBookName: boolean;
 	addSpaceAfterBibleBookNumber: boolean;
@@ -123,6 +124,8 @@ export default class BibleLinkerPro extends Plugin {
 				input = input.trim();
 
 				const wtLocaleEN = "E";
+				const localeEN = "en";
+				const rsconfEN = "r1";
 				const bibleBooksEN = [
 					["ge", "gen", "genesis"],
 					["ex", "exodus"],
@@ -193,6 +196,8 @@ export default class BibleLinkerPro extends Plugin {
 				];
 
 				const wtLocaleNL = "O";
+				const localeNL = "nl";
+				const rsconfNL = "r18";
 				const bibleBooksNL = [
 					["ge", "gen", "genesis"],
 					["ex", "exodus"],
@@ -263,6 +268,8 @@ export default class BibleLinkerPro extends Plugin {
 				];
 
 				const wtLocaleFR = "F";
+				const localeFR = "fr";
+				const rsconfFR = "r30";
 				const bibleBooksFR = [
 					["gn", "gen", "genèse"],
 					["ex", "exode"],
@@ -333,6 +340,8 @@ export default class BibleLinkerPro extends Plugin {
 				];
 
 				const wtLocalePtBr = "T";
+				const localePtBr = "pt";
+				const rsconfPtBr = "r5";
 				const bibleBooksPtBr = [
 					["gên", "gênesis"],
 					["êx", "êxo", "êxodo"],
@@ -403,6 +412,8 @@ export default class BibleLinkerPro extends Plugin {
 				];
 
 				const wtLocaleDE = "X";
+				const localeDE = "de";
+				const rsconfDE = "r10";
 				const bibleBooksDE = [
 					["1mo", "1mose"],
 					["2mo", "2mose"],
@@ -473,6 +484,8 @@ export default class BibleLinkerPro extends Plugin {
 				];
 
 				const wtLocaleES = "S";
+				const localeES = "es";
+				const rsconfES = "r4";
 				const bibleBooksES = [
 					["ge", "gen", "génesis"],
 					["ex", "éx", "exo", "éxodo"],
@@ -551,6 +564,8 @@ export default class BibleLinkerPro extends Plugin {
 				];
 
 				const wtLocaleFI = "FI";
+				const localeFI = "fi";
+				const rsconfFI = "r16";
 				const bibleBooksFI = [
 					["1mo", "1moos", "1mooseksen"],
 					["2mo", "2moos", "2mooseksen"],
@@ -621,6 +636,8 @@ export default class BibleLinkerPro extends Plugin {
 				];
 
 				const wtLocaleUA = "K";
+				const localeUA = "uk";
+				const rsconfUA = "r15";
 				const bibleBooksUA = [
 					["бт", "бут", "буття"],
 					["вх", "вих", "вихід"],
@@ -711,35 +728,51 @@ export default class BibleLinkerPro extends Plugin {
 				];
 
 				let wtLocale = wtLocaleEN;
+				let locale = localeEN;
+				let rsconf = rsconfEN;
 				let bibleBooks = bibleBooksEN;
 
 				switch (this.settings.pluginLanguage) {
 					case "nl":
 						wtLocale = wtLocaleNL;
+						locale = localeNL;
+						rsconf = rsconfNL;
 						bibleBooks = bibleBooksNL;
 						break;
 					case "fr":
 						wtLocale = wtLocaleFR;
+						locale = localeFR;
+						rsconf = rsconfFR;
 						bibleBooks = bibleBooksFR;
 						break;
 					case "pt-br":
 						wtLocale = wtLocalePtBr;
+						locale = localePtBr;
+						rsconf = rsconfPtBr;
 						bibleBooks = bibleBooksPtBr;
 						break;
 					case "de":
 						wtLocale = wtLocaleDE;
+						locale = localeDE;
+						rsconf = rsconfDE;
 						bibleBooks = bibleBooksDE;
 						break;
 					case "es":
 						wtLocale = wtLocaleES;
+						locale = localeES;
+						rsconf = rsconfES;
 						bibleBooks = bibleBooksES;
 						break;
 					case "fi":
 						wtLocale = wtLocaleFI;
+						locale = localeFI;
+						rsconf = rsconfFI;
 						bibleBooks = bibleBooksFI;
 						break;
 					case "ua":
 						wtLocale = wtLocaleUA;
+						locale = localeUA;
+						rsconf = rsconfUA;
 						bibleBooks = bibleBooksUA;
 						break;
 				}
@@ -748,6 +781,7 @@ export default class BibleLinkerPro extends Plugin {
 				let context = "";
 				let bibleBookLong;
 				let bibleBookHasNumber = false;
+				let bibleBookNum = 1;
 
 				if ([1, 2, 3, 4, 5].includes(parseInt(input.substring(0, 1)))) {
 					if (input.substring(1, 2) == " ") {
@@ -756,18 +790,26 @@ export default class BibleLinkerPro extends Plugin {
 					bibleBookHasNumber = true;
 				}
 
+				// The number of bible book, counting from 1
 				const bibleBookQuery = input.split(" ")[0].toLowerCase();
+
 				for (let i = 0; i < bibleBooks.length; i++) {
 					if (bibleBooks[i].includes(bibleBookQuery)) {
-						if ((i + 1).toString().length == 1) {
-							linkOutput += "0" + (i + 1);
+						if (!this.settings.useOnlineLibrary) {
+							if ((i + 1).toString().length == 1) {
+								linkOutput += "0" + (i + 1);
+							} else {
+								linkOutput += i + 1;
+							}
 						} else {
-							linkOutput += i + 1;
+							bibleBookNum = i + 1;
 						}
 						bibleBookLong = bibleBooks[i][bibleBooks[i].length - 1];
 						i = bibleBooks.length;
 					}
 				}
+
+				console.log("bibleBookLong" + bibleBookLong);
 
 				if (bibleBookLong == undefined) {
 					//If an error occurs, replace text with initial input
@@ -782,15 +824,17 @@ export default class BibleLinkerPro extends Plugin {
 
 				let chapter = input.split(" ")[1];
 				chapter = chapter.split(":")[0];
-				if (chapter.length == 1) {
-					linkOutput += "00" + chapter;
-				} else if (chapter.length == 2) {
-					linkOutput += "0" + chapter;
-				} else {
-					linkOutput += chapter;
-				}
+				if (!this.settings.useOnlineLibrary) {
+					if (chapter.length == 1) {
+						linkOutput += "00" + chapter;
+					} else if (chapter.length == 2) {
+						linkOutput += "0" + chapter;
+					} else {
+						linkOutput += chapter;
+					}
 
-				context += linkOutput;
+					context += linkOutput;
+				}
 
 				let verse = input.split(" ")[1];
 				verse = verse.split(":")[1];
@@ -799,12 +843,15 @@ export default class BibleLinkerPro extends Plugin {
 				} else if (input.includes(",")) {
 					verse = verse.split(",")[0];
 				}
-				if (verse.length == 1) {
-					linkOutput += "00" + verse;
-				} else if (verse.length == 2) {
-					linkOutput += "0" + verse;
-				} else {
-					linkOutput += verse;
+
+				if (!this.settings.useOnlineLibrary) {
+					if (verse.length == 1) {
+						linkOutput += "00" + verse;
+					} else if (verse.length == 2) {
+						linkOutput += "0" + verse;
+					} else {
+						linkOutput += verse;
+					}
 				}
 
 				let verseContinue = "";
@@ -817,14 +864,23 @@ export default class BibleLinkerPro extends Plugin {
 						verseContinue = verseContinue.substring(1);
 					}
 				}
+
+				const bookChapterFormat = `${bibleBookNum}:${chapter}`;
+				let onlineVerseFormat = `${bookChapterFormat}:${verse}`;
+
 				if (verseContinue != undefined && verseContinue != "") {
-					linkOutput += "-" + context;
-					if (verseContinue.length == 1) {
-						linkOutput += "00" + verseContinue;
-					} else if (verseContinue.length == 2) {
-						linkOutput += "0" + verseContinue;
+					if (!this.settings.useOnlineLibrary) {
+						linkOutput += "-" + context;
+						if (verseContinue.length == 1) {
+							linkOutput += "00" + verseContinue;
+						} else if (verseContinue.length == 2) {
+							linkOutput += "0" + verseContinue;
+						} else {
+							linkOutput += verseContinue;
+						}
 					} else {
-						linkOutput += verseContinue;
+						console.log("verseContinue" + verseContinue);
+						onlineVerseFormat += `-${bookChapterFormat}:${verseContinue}`;
 					}
 				}
 
@@ -895,7 +951,13 @@ export default class BibleLinkerPro extends Plugin {
 					renderOutput +
 					this.settings.linkSuffix;
 
-				const link = `jwlibrary:///finder?srcid=jwlshare&wtlocale=${wtLocale}&prefer=lang&pub=${this.settings.bibleEdition}&bible=${linkOutput}`;
+				let link;
+				if (this.settings.useOnlineLibrary) {
+					link = `https://wol.jw.org/${locale}/wol/b/${rsconf}/lp-${wtLocale.toLowerCase()}/${this.settings.bibleEdition}/${bibleBookNum}/${chapter}#study=discover&v=${onlineVerseFormat}`;
+				} else {
+					link = `jwlibrary:///finder?srcid=jwlshare&wtlocale=${wtLocale}&prefer=lang&pub=${this.settings.bibleEdition}&bible=${linkOutput}`;
+				}
+
 				editor.replaceSelection("[" + renderOutput + "](" + link + ")");
 
 				if (this.settings.autoOpenLink) {
