@@ -100,14 +100,32 @@ export default class BibleLinkerPro extends Plugin {
 						item.setTitle("Convert Bible text to JW Library link")
 							.setIcon("link")
 							.onClick(async () => {
-								convertBibleTextToJWLibraryLink(editor);
+								convertBibleTextToJWLibraryLink(editor, true);
 							});
 					});
 				},
 			),
 		);
 
-		const convertBibleTextToJWLibraryLink = (editor: Editor) => {
+		this.registerEvent(
+			this.app.workspace.on(
+				"editor-menu",
+				(menu, editor, view: MarkdownView) => {
+					menu.addItem((item) => {
+						item.setTitle("Open Bible text in JW Library")
+							.setIcon("link")
+							.onClick(async () => {
+								convertBibleTextToJWLibraryLink(editor, false);
+							});
+					});
+				},
+			),
+		);
+
+		const convertBibleTextToJWLibraryLink = (
+			editor: Editor,
+			replaceText: boolean,
+		) => {
 			let input;
 			try {
 				if (this.settings.autoGetLine) {
@@ -400,6 +418,76 @@ export default class BibleLinkerPro extends Plugin {
 					["2ti", "2tim", "2timóteo"],
 					["tit", "tito"],
 					["flm", "filêm", "filêmon"],
+					["he", "heb", "hebreus"],
+					["tg", "tia", "tiago"],
+					["1pe", "1ped", "1pedro"],
+					["2pe", "2ped", "2pedro"],
+					["1jo", "1joão"],
+					["2jo", "2joão"],
+					["3jo", "3joão"],
+					["ju", "judas"],
+					["ap", "apo", "apocalipse"],
+				];
+
+				const wtLocalePt = "TPO";
+				const bibleBooksPt = [
+					["ge", "gén", "gênesis"],
+					["ex", "êx", "êxo", "êxodo"],
+					["le", "lev", "levítico"],
+					["n", "núm", "números"],
+					["de", "deu", "deuteronómio"],
+					["jos", "josué"],
+					["jz", "juí", "juízes"],
+					["ru", "rute"],
+					["1sa", "1sam", "1samuel"],
+					["2sa", "2sam", "2samuel"],
+					["1rs", "1reis"],
+					["2rs", "2reis"],
+					["1cr", "1crô", "1crónicas"],
+					["2cr", "2crô", "2crónicas"],
+					["esd", "esd", "esdras"],
+					["ne", "nee", "neemias"],
+					["est", "ester"],
+					["jó"],
+					["sal", "salmos"],
+					["pr", "pro", "provérbios"],
+					["ec", "ecl", "eclesiastes"],
+					["cân", "cântico de salomão"],
+					["is", "isa", "isaías"],
+					["je", "jer", "jeremias"],
+					["la", "lam", "lamentações"],
+					["ez", "eze", "ezequiel"],
+					["da", "dan", "daniel"],
+					["os", "ose", "oseias"],
+					["jl", "joel"],
+					["am", "amós"],
+					["ob", "obd", "obadias"],
+					["jon", "jonas"],
+					["miq", "miq", "miqueias"],
+					["na", "naum"],
+					["hab", "habacuque"],
+					["sof", "sofonias"],
+					["ag", "ageu"],
+					["za", "zac", "zacarias"],
+					["mal", "malaquias"],
+					["mt", "mat", "mateus"],
+					["mr", "mar", "marcos"],
+					["lu", "luc", "lucas"],
+					["jo", "joão"],
+					["at", "atos"],
+					["ro", "rom", "romanos"],
+					["1co", "1cor", "1coríntios"],
+					["2co", "2cor", "2coríntios"],
+					["gál", "gálatas"],
+					["ef", "efé", "efésios"],
+					["fil", "filipenses"],
+					["col", "colossenses"],
+					["1te", "1tes", "1tessalonicenses"],
+					["2te", "2tes", "2tessalonicenses"],
+					["1ti", "1tim", "1timóteo"],
+					["2ti", "2tim", "2timóteo"],
+					["tit", "tito"],
+					["flm", "filêm", "filémon"],
 					["he", "heb", "hebreus"],
 					["tg", "tia", "tiago"],
 					["1pe", "1ped", "1pedro"],
@@ -727,6 +815,76 @@ export default class BibleLinkerPro extends Plugin {
 					["об", "обявл", "одкровення", "об'явлення"],
 				];
 
+				const wtLocaleHU = "H";
+				const bibleBooksHU = [
+					["1mó", "1mo", "1mózes"],
+					["2mó", "2mo", "2mózes"],
+					["3mó", "3mo", "3mózes"],
+					["4mó", "4mo", "4mózes"],
+					["5mó", "5mo", "5mózes"],
+					["jzs", "jozs", "józsué"],
+					["bí", "bir", "bírák"],
+					["ru", "ruth", "ruth"],
+					["1sá", "1sam", "1sámuel"],
+					["2sá", "2sam", "2sámuel"],
+					["1ki", "1kir", "1királyok"],
+					["2ki", "2kir", "2királyok"],
+					["1kr", "1kron", "1krónikák"],
+					["2kr", "2kron", "2krónikák"],
+					["ezs", "ezsdr", "ezsdrás"],
+					["ne", "neh", "nehémiás"],
+					["esz", "eszt", "eszter"],
+					["jób", "job", "jób"],
+					["zs", "zsolt", "zsoltárok"],
+					["pl", "peld", "példabeszédek"],
+					["pr", "pred", "prédikátor"],
+					["én", "enek", "énekek éneke"],
+					["ézs", "ezsai", "ézsaiás"],
+					["jr", "jer", "jeremiás"],
+					["si", "siral", "siralmak"],
+					["ez", "ezek", "ezékiel"],
+					["dá", "dan", "dániel"],
+					["hó", "hos", "hóseás"],
+					["jóe", "joel", "jóel"],
+					["ám", "amo", "ámós"],
+					["ab", "abd", "abdiás"],
+					["jón", "jónás", "jónás"],
+					["mi", "mike", "mikeás"],
+					["ná", "nah", "náhum"],
+					["ha", "hab", "habakuk"],
+					["so", "sof", "sofóniás"],
+					["ag", "agg", "aggeus"],
+					["za", "zak", "zakariás"],
+					["ma", "mal", "malakiás"],
+					["mt", "mat", "máté"],
+					["mr", "mar", "márk"],
+					["lk", "luk", "lukács"],
+					["jn", "ján", "jános"],
+					["cs", "csel", "cselekedetek"],
+					["ró", "rom", "róma"],
+					["1ko", "1kor", "1korintusz"],
+					["2ko", "2kor", "2korintusz"],
+					["ga", "gal", "galácia"],
+					["ef", "efez", "efézus"],
+					["flp", "filip", "filippi"],
+					["kol", "kolosz", "kolosszé"],
+					["1te", "1tesz", "1tesszalonika"],
+					["2te", "2tesz", "2tesszalonika"],
+					["1tim", "1timo", "1timóteusz"],
+					["2tim", "2timo", "2timóteusz"],
+					["tit", "titu", "titusz"],
+					["flm", "filem", "filemon"],
+					["héb", "heb", "héberek"],
+					["jk", "jak", "jakab"],
+					["1pt", "1pet", "1péter"],
+					["2pt", "2pet", "2péter"],
+					["1jn", "1jan", "1jános"],
+					["2jn", "2jan", "2jános"],
+					["3jn", "3jan", "3jános"],
+					["júd", "júdás"],
+					["jel", "jelen", "jelenések"],
+				];
+
 				let wtLocale = wtLocaleEN;
 				let locale = localeEN;
 				let rsconf = rsconfEN;
@@ -751,6 +909,10 @@ export default class BibleLinkerPro extends Plugin {
 						rsconf = rsconfPtBr;
 						bibleBooks = bibleBooksPtBr;
 						break;
+					case "pt":
+						wtLocale = wtLocalePt;
+						bibleBooks = bibleBooksPt;
+						break;
 					case "de":
 						wtLocale = wtLocaleDE;
 						locale = localeDE;
@@ -774,6 +936,10 @@ export default class BibleLinkerPro extends Plugin {
 						locale = localeUA;
 						rsconf = rsconfUA;
 						bibleBooks = bibleBooksUA;
+						break;
+					case "hu":
+						wtLocale = wtLocaleHU;
+						bibleBooks = bibleBooksHU;
 						break;
 				}
 
@@ -960,7 +1126,13 @@ export default class BibleLinkerPro extends Plugin {
 
 				editor.replaceSelection("[" + renderOutput + "](" + link + ")");
 
-				if (this.settings.autoOpenLink) {
+				if (replaceText) {
+					editor.replaceSelection(
+						"[" + renderOutput + "](" + link + ")",
+					);
+				}
+
+				if (this.settings.autoOpenLink || !replaceText) {
 					window.open(link);
 				}
 			} catch (error) {
@@ -975,12 +1147,20 @@ export default class BibleLinkerPro extends Plugin {
 			}
 		};
 
-		//Add editor command that can perform some operation on the current editor instance
+		//Add editor commands
 		this.addCommand({
 			id: "convert-Bible-text-to-JW-Library-link",
 			name: "Convert Bible text to JW Library link",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				convertBibleTextToJWLibraryLink(editor);
+				convertBibleTextToJWLibraryLink(editor, true);
+			},
+		});
+
+		this.addCommand({
+			id: "open-Bible-text-in-JW-Library",
+			name: "Open Bible text in JW Library",
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				convertBibleTextToJWLibraryLink(editor, false);
 			},
 		});
 
@@ -1062,15 +1242,22 @@ class UpdateNotesModal extends Modal {
 
 		//Changelog
 		const splashScreenText = `
-		-   Fixed wtLocale for Ukrainian language by @gaborishka
+		-   Added new command "Open Bible text in JW Library" to only open the Bible text without replacing text in the editor.
+-   Added Portuguese (Portugal) by @joao-p-marques
+-   Added Hungarian by @MGeri97
+-   When a Bible text is not recognized, it keeps the original content instead of replacing it with "Undefined" by @xrtxn
+-   Improved visual of splash screen
 		`;
-		const splayScreenList = splashScreenText.split("\n");
+		const splayScreenList = splashScreenText
+			.replace(/-   /g, "")
+			.split("\n");
 
 		for (let i = 0; i < splayScreenList.length; i++) {
-			if (splayScreenList[i] != "") {
-				contentEl.createEl("p", {
+			if (splayScreenList[i].length > 2) {
+				contentEl.createEl("li", {
 					text: splayScreenList[i],
 				});
+				contentEl.createEl("br");
 			}
 		}
 
