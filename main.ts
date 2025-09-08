@@ -53,6 +53,12 @@ const DEFAULT_SETTINGS: Partial<PluginSettings> = {
 	lastVersion: "",
 };
 
+enum EditorAction {
+	OpenUrl,
+	InsertUrl,
+	InsertQuotation,
+}
+
 const translationsTyped: { [key: string]: { [key: string]: string } } =
 	translations;
 
@@ -108,7 +114,10 @@ export default class BibleLinkerPro extends Plugin {
 						item.setTitle("Convert Bible text to JW Library link")
 							.setIcon("link")
 							.onClick(async () => {
-								convertBibleTextToJWLibraryLink(editor, true);
+								convertBibleTextToJWLibraryLink(
+									editor,
+									EditorAction.InsertUrl,
+								);
 							});
 					});
 				},
@@ -123,16 +132,67 @@ export default class BibleLinkerPro extends Plugin {
 						item.setTitle("Open Bible text in JW Library")
 							.setIcon("link")
 							.onClick(async () => {
-								convertBibleTextToJWLibraryLink(editor, false);
+								convertBibleTextToJWLibraryLink(
+									editor,
+									EditorAction.OpenUrl,
+								);
+							});
+					});
+				},
+			),
+		);
+		this.registerEvent(
+			this.app.workspace.on(
+				"editor-menu",
+				(menu, editor, view: MarkdownView) => {
+					menu.addItem((item) => {
+						item.setTitle("Insert quotation from Bible")
+							.setIcon("link")
+							.onClick(async () => {
+								convertBibleTextToJWLibraryLink(
+									editor,
+									EditorAction.InsertQuotation,
+								);
 							});
 					});
 				},
 			),
 		);
 
+		const insertBibleLink = async (
+			editor: Editor,
+			linkOutput: string,
+			jwEndpoint: string,
+		) => {
+			const cur = editor.getCursor(); // { line, ch }
+			const lineLen = editor.getLine(cur.line).length;
+			let text;
+			try {
+				// Insert a newline at end of current line, then move cursor to new empty line
+				text = await fetchVerse(
+					linkOutput,
+					this.settings.showQuotationVerse,
+					jwEndpoint,
+				);
+				editor.replaceRange(
+					"\n" +
+						this.settings.quotationPrefix +
+						text +
+						this.settings.quotationSuffix +
+						"\n",
+					{
+						line: cur.line,
+						ch: lineLen,
+					},
+				);
+			} catch (error) {
+				new Notice(this.getTranslation("FETCH_ERROR"));
+			}
+		};
+
 		const convertBibleTextToJWLibraryLink = async (
 			editor: Editor,
-			replaceText: boolean,
+			action: EditorAction,
 		) => {
 			let input;
 			try {
@@ -150,6 +210,8 @@ export default class BibleLinkerPro extends Plugin {
 				input = input.trim();
 
 				const wtLocaleEN = "E";
+				const jwEndpointEN =
+					"https://www.jw.org/en/library/bible/study-bible/books/json/html/";
 				const bibleBooksEN = [
 					["ge", "gen", "genesis"],
 					["ex", "exodus"],
@@ -808,6 +870,8 @@ export default class BibleLinkerPro extends Plugin {
 				];
 
 				const wtLocaleHU = "H";
+				const jwEndpointHU =
+					"https://www.jw.org/hu/konyvtar/biblia/magyarazatos-biblia/konyvek/json/html/";
 				const bibleBooksHU = [
 					["1mó", "1mo", "1mózes"],
 					["2mó", "2mo", "2mózes"],
@@ -878,6 +942,7 @@ export default class BibleLinkerPro extends Plugin {
 				];
 
 				let wtLocale = wtLocaleEN;
+				let jwEndpoint = jwEndpointEN;
 				let bibleBooks = bibleBooksEN;
 
 				switch (this.settings.pluginLanguage) {
@@ -915,6 +980,7 @@ export default class BibleLinkerPro extends Plugin {
 						break;
 					case "hu":
 						wtLocale = wtLocaleHU;
+						jwEndpoint = jwEndpointHU;
 						bibleBooks = bibleBooksHU;
 						break;
 				}
@@ -1072,40 +1138,22 @@ export default class BibleLinkerPro extends Plugin {
 
 				const link = `jwlibrary:///finder?srcid=jwlshare&wtlocale=${wtLocale}&prefer=lang&pub=${this.settings.bibleEdition}&bible=${linkOutput}`;
 
-				if (replaceText) {
+				if (action == EditorAction.InsertUrl) {
 					editor.replaceSelection(
 						"[" + renderOutput + "](" + link + ")",
 					);
 				}
 
-				if (this.settings.autoOpenLink || !replaceText) {
+				if (
+					(action == EditorAction.InsertUrl &&
+						this.settings.autoOpenLink) ||
+					action == EditorAction.OpenUrl
+				) {
 					window.open(link);
 				}
 
-				if (this.settings.insertQuote) {
-					const cur = editor.getCursor(); // { line, ch }
-					const lineLen = editor.getLine(cur.line).length;
-					let text;
-					try {
-						// Insert a newline at end of current line, then move cursor to new empty line
-						text = await fetchVerse(
-							linkOutput,
-							this.settings.showQuotationVerse,
-						);
-						editor.replaceRange(
-							"\n" +
-								this.settings.quotationPrefix +
-								text +
-								this.settings.quotationSuffix +
-								"\n",
-							{
-								line: cur.line,
-								ch: lineLen,
-							},
-						);
-					} catch (error) {
-						new Notice(this.getTranslation("FETCH_ERROR"));
-					}
+				if (this.settings.insertQuote || EditorAction.InsertQuotation) {
+					insertBibleLink(editor, linkOutput, jwEndpoint);
 				}
 			} catch (error) {
 				//If an error occurs, replace text with initial input
@@ -1124,7 +1172,7 @@ export default class BibleLinkerPro extends Plugin {
 			id: "convert-Bible-text-to-JW-Library-link",
 			name: "Convert Bible text to JW Library link",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				convertBibleTextToJWLibraryLink(editor, true);
+				convertBibleTextToJWLibraryLink(editor, EditorAction.InsertUrl);
 			},
 		});
 
@@ -1132,7 +1180,18 @@ export default class BibleLinkerPro extends Plugin {
 			id: "open-Bible-text-in-JW-Library",
 			name: "Open Bible text in JW Library",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				convertBibleTextToJWLibraryLink(editor, false);
+				convertBibleTextToJWLibraryLink(editor, EditorAction.OpenUrl);
+			},
+		});
+
+		this.addCommand({
+			id: "insert-quotation-from-bible",
+			name: "Insert quotation from Bible",
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				convertBibleTextToJWLibraryLink(
+					editor,
+					EditorAction.InsertQuotation,
+				);
 			},
 		});
 

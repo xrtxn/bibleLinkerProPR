@@ -3,13 +3,14 @@ import { requestUrl, RequestUrlParam } from "obsidian";
 export async function fetchVerse(
 	verseRange: string,
 	showVerseNum: boolean,
+	endpoint: string,
 ): Promise<string> {
 	if (verseRange.charAt(0) === "0") {
 		//remove the first 0 if the book is in the first 9 cause of json querying
 		verseRange = verseRange.substring(1);
 	}
 
-	const url = `https://www.jw.org/hu/konyvtar/biblia/magyarazatos-biblia/konyvek/json/html/${verseRange}`;
+	const url = endpoint + verseRange;
 	const res = await requestUrl({
 		url,
 		method: "GET",
