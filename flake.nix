@@ -107,6 +107,7 @@
                   sleep 1
                 fi
                 changed=0
+				sleep 1
                 for f in manifest.json main.js styles.css; do
                   if [ -f "$PROJECT_ROOT/$f" ]; then cp -f "$PROJECT_ROOT/$f" "$PLUGIN_DIR/$f" && changed=1; fi
                   if [ -f "$PROJECT_ROOT/out/$f" ]; then cp -f "$PROJECT_ROOT/out/$f" "$PLUGIN_DIR/$f" && changed=1; fi

@@ -1,7 +1,8 @@
 import { MainSettingTab } from "settings";
 // import { ExampleView, VIEW_TYPE_EXAMPLE } from "ExampleView";
 import * as translations from "translations.json";
-import { moment } from "obsidian";
+import { moment, Notice } from "obsidian";
+import { fetchVerse } from "qoutation";
 
 import {
 	App,
@@ -22,6 +23,10 @@ interface PluginSettings {
 	addSpaceAfterBibleBookNumber: boolean;
 	autoGetLine: boolean;
 	autoOpenLink: boolean;
+	insertQuote: boolean;
+	showQuotationVerse: boolean;
+	quotationPrefix: string;
+	quotationSuffix: string;
 	makeBold: boolean;
 	makeItalic: boolean;
 	linkPrefix: string;
@@ -37,6 +42,10 @@ const DEFAULT_SETTINGS: Partial<PluginSettings> = {
 	addSpaceAfterBibleBookNumber: true,
 	autoGetLine: false,
 	autoOpenLink: false,
+	insertQuote: false,
+	showQuotationVerse: true,
+	quotationPrefix: ">",
+	quotationSuffix: "",
 	makeBold: false,
 	makeItalic: false,
 	linkPrefix: "",
@@ -102,8 +111,8 @@ export default class BibleLinkerPro extends Plugin {
 								convertBibleTextToJWLibraryLink(editor, true);
 							});
 					});
-				}
-			)
+				},
+			),
 		);
 
 		this.registerEvent(
@@ -117,13 +126,13 @@ export default class BibleLinkerPro extends Plugin {
 								convertBibleTextToJWLibraryLink(editor, false);
 							});
 					});
-				}
-			)
+				},
+			),
 		);
 
-		const convertBibleTextToJWLibraryLink = (
+		const convertBibleTextToJWLibraryLink = async (
 			editor: Editor,
-			replaceText: boolean
+			replaceText: boolean,
 		) => {
 			let input;
 			try {
@@ -1065,12 +1074,38 @@ export default class BibleLinkerPro extends Plugin {
 
 				if (replaceText) {
 					editor.replaceSelection(
-						"[" + renderOutput + "](" + link + ")"
+						"[" + renderOutput + "](" + link + ")",
 					);
 				}
 
 				if (this.settings.autoOpenLink || !replaceText) {
 					window.open(link);
+				}
+
+				if (this.settings.insertQuote) {
+					const cur = editor.getCursor(); // { line, ch }
+					const lineLen = editor.getLine(cur.line).length;
+					let text;
+					try {
+						// Insert a newline at end of current line, then move cursor to new empty line
+						text = await fetchVerse(
+							linkOutput,
+							this.settings.showQuotationVerse,
+						);
+						editor.replaceRange(
+							"\n" +
+								this.settings.quotationPrefix +
+								text +
+								this.settings.quotationSuffix +
+								"\n",
+							{
+								line: cur.line,
+								ch: lineLen,
+							},
+						);
+					} catch (error) {
+						new Notice(this.getTranslation("FETCH_ERROR"));
+					}
 				}
 			} catch (error) {
 				//If an error occurs, replace text with initial input
@@ -1120,7 +1155,7 @@ export default class BibleLinkerPro extends Plugin {
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			await this.loadData()
+			await this.loadData(),
 		);
 	}
 
@@ -1180,10 +1215,10 @@ class UpdateNotesModal extends Modal {
 		//Changelog
 		const splashScreenText = `
 		-   Added new command "Open Bible text in JW Library" to only open the Bible text without replacing text in the editor.
--   Added Portuguese (Portugal) by @joao-p-marques
--   Added Hungarian by @MGeri97
--   When a Bible text is not recognized, it keeps the original content instead of replacing it with "Undefined" by @xrtxn
--   Improved visual of splash screen
+		-   Added Portuguese (Portugal) by @joao-p-marques
+		-   Added Hungarian by @MGeri97
+		-   When a Bible text is not recognized, it keeps the original content instead of replacing it with "Undefined" by @xrtxn
+		-   Improved visual of splash screen
 		`;
 		const splayScreenList = splashScreenText
 			.replace(/-   /g, "")
