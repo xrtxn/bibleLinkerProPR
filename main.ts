@@ -159,7 +159,7 @@ export default class BibleLinkerPro extends Plugin {
 			),
 		);
 
-		const insertBibleLink = async (
+		const insertBibleQuotation = async (
 			editor: Editor,
 			linkOutput: string,
 			jwEndpoint: string,
@@ -1152,8 +1152,12 @@ export default class BibleLinkerPro extends Plugin {
 					window.open(link);
 				}
 
-				if (this.settings.insertQuote || EditorAction.InsertQuotation) {
-					insertBibleLink(editor, linkOutput, jwEndpoint);
+				if (
+					(action != EditorAction.OpenUrl &&
+						this.settings.insertQuote) ||
+					action == EditorAction.InsertQuotation
+				) {
+					insertBibleQuotation(editor, linkOutput, jwEndpoint);
 				}
 			} catch (error) {
 				//If an error occurs, replace text with initial input

@@ -163,50 +163,6 @@ export class MainSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName(this.getTranslation("QUOTATION_PREFIX"))
-			.setDesc(this.getTranslation("QUOTATION_PREFIX_DESC"))
-			.addText((text) =>
-				text
-					.setValue(this.plugin.settings.quotationPrefix)
-					.onChange(async (value) => {
-						this.plugin.settings.quotationPrefix = value;
-						await this.plugin.saveSettings();
-					})
-					.setPlaceholder(this.getTranslation("PREFIX_HERE")),
-			)
-			.addExtraButton((b) => {
-				b.setIcon("rotate-ccw")
-					.setTooltip(this.getTranslation("CLEAR_QUOTATION_PREFIX"))
-					.onClick(async () => {
-						this.plugin.settings.quotationPrefix = "";
-						await this.plugin.saveSettings();
-						this.display();
-					});
-			});
-
-		new Setting(containerEl)
-			.setName(this.getTranslation("QUOTATION_SUFFIX"))
-			.setDesc(this.getTranslation("QUOTATION_SUFFIX_DESC"))
-			.addText((text) =>
-				text
-					.setValue(this.plugin.settings.quotationSuffix)
-					.onChange(async (value) => {
-						this.plugin.settings.quotationSuffix = value;
-						await this.plugin.saveSettings();
-					})
-					.setPlaceholder(this.getTranslation("SUFFIX_HERE")),
-			)
-			.addExtraButton((b) => {
-				b.setIcon("rotate-ccw")
-					.setTooltip(this.getTranslation("CLEAR_QUOTATION_SUFFIX"))
-					.onClick(async () => {
-						this.plugin.settings.quotationSuffix = "";
-						await this.plugin.saveSettings();
-						this.display();
-					});
-			});
-
-		new Setting(containerEl)
 			.setName(this.getTranslation("BIBLE_EDITION"))
 			.setDesc(this.getTranslation("BIBLE_EDITION_DESC"))
 			.addToggle((Boolean) =>
@@ -314,6 +270,50 @@ export class MainSettingTab extends PluginSettingTab {
 					.setTooltip(this.getTranslation("CLEAR_LINK_SUFFIX"))
 					.onClick(async () => {
 						this.plugin.settings.linkSuffix = "";
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName(this.getTranslation("QUOTATION_PREFIX"))
+			.setDesc(this.getTranslation("QUOTATION_PREFIX_DESC"))
+			.addText((text) =>
+				text
+					.setValue(this.plugin.settings.quotationPrefix)
+					.onChange(async (value) => {
+						this.plugin.settings.quotationPrefix = value;
+						await this.plugin.saveSettings();
+					})
+					.setPlaceholder(this.getTranslation("PREFIX_HERE")),
+			)
+			.addExtraButton((b) => {
+				b.setIcon("rotate-ccw")
+					.setTooltip(this.getTranslation("CLEAR_QUOTATION_PREFIX"))
+					.onClick(async () => {
+						this.plugin.settings.quotationPrefix = "";
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName(this.getTranslation("QUOTATION_SUFFIX"))
+			.setDesc(this.getTranslation("QUOTATION_SUFFIX_DESC"))
+			.addText((text) =>
+				text
+					.setValue(this.plugin.settings.quotationSuffix)
+					.onChange(async (value) => {
+						this.plugin.settings.quotationSuffix = value;
+						await this.plugin.saveSettings();
+					})
+					.setPlaceholder(this.getTranslation("SUFFIX_HERE")),
+			)
+			.addExtraButton((b) => {
+				b.setIcon("rotate-ccw")
+					.setTooltip(this.getTranslation("CLEAR_QUOTATION_SUFFIX"))
+					.onClick(async () => {
+						this.plugin.settings.quotationSuffix = "";
 						await this.plugin.saveSettings();
 						this.display();
 					});
